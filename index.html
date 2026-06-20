@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 契約掃雷器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+
+    <header class="bg-slate-900 text-white p-4 shadow-md flex-shrink-0 z-10">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-sky-400 text-3xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wider">AI 契約掃雷器</h1>
+                    <p class="text-xs text-slate-400">支援跨領域防呆與動態法規推演</p>
+                </div>
+            </div>
+            <div class="hidden md:flex gap-4 text-sm font-medium">
+                <span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full"><i class="fa-solid fa-check-circle"></i> 安全</span>
+                <span class="bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full"><i class="fa-solid fa-triangle-exclamation"></i> 須注意</span>
+                <span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full"><i class="fa-solid fa-skull-crossbones"></i> 危險</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col md:flex-row overflow-hidden max-w-[1400px] mx-auto w-full p-4 gap-6">
+        
+        <section class="w-full md:w-4/12 flex flex-col gap-4 h-full">
+            <div class="glass-panel p-5 rounded-xl shadow-sm border border-slate-200 flex-shrink-0">
+                <h2 class="font-bold text-lg mb-3 flex items-center gap-2"><i class="fa-solid fa-book-bookmark text-sky-500"></i> 1. 選擇契約類型</h2>
+                <select id="standardSelect" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none text-sm transition font-medium">
+                    <option value="rent">房屋租約 / 租戶生活條約 (內政部)</option>
+                    <option value="labor">勞動契約 / 工作規則 (勞動部)</option>
+                    <option value="other">一般契約 / 未分類 (民法)</option>
+                </select>
+                <div class="mt-3 p-3 bg-slate-100 rounded-lg text-xs text-slate-600 h-24 overflow-y-auto no-scrollbar border border-slate-200 leading-relaxed" id="standardPreview"></div>
+            </div>
+
+            <div class="glass-panel p-5 rounded-xl shadow-sm border border-slate-200 flex-grow flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-file-signature text-sky-500"></i> 2. 貼上契約文字</h2>
+                </div>
+
+                <textarea id="userContract" class="w-full flex-grow p-4 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 outline-none text-sm resize-none mb-2" placeholder="請將您要審閱的契約或生活公約、工作規則貼在這裡..."></textarea>
+                
+                <p class="text-xs text-slate-400 mb-4 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-info"></i> 目前支援純文字分析，未來將導入 PDF/OCR 圖片文字辨識功能。
+                </p>
+                
+                <div class="flex gap-2 mb-4">
+                    <button onclick="loadTrapExample()" class="flex-1 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 rounded-lg transition" id="demoBtn"><i class="fa-solid fa-bolt text-amber-500"></i> 載入惡房東範例</button>
+                    <button onclick="document.getElementById('userContract').value=''" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-500 py-2 px-3 rounded-lg transition"><i class="fa-solid fa-trash-can"></i> 清除</button>
+                </div>
+
+                <button id="scanBtn" onclick="scanContract()" class="w-full bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-900 hover:to-slate-800 text-white font-bold py-3.5 rounded-lg shadow-md transform transition hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-microchip text-sky-400"></i> 開始 AI 掃雷
+                </button>
+            </div>
+        </section>
+
+        <section class="w-full md:w-8/12 flex flex-col h-full relative">
+            
+            <div id="resultsArea" class="glass-panel p-6 rounded-xl shadow-sm border border-slate-200 h-full overflow-hidden hidden flex-col gap-4">
+                
+                <div class="w-full flex flex-col md:flex-row gap-6 border-b border-slate-200 pb-4 shrink-0" style="height: 32%; min-height: 200px;">
+                    <div class="w-full md:w-1/2 flex flex-col h-full">
+                        <div class="flex justify-between items-center mb-2 shrink-0">
+                            <h2 id="chartTitle" class="text-lg font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-chart-pie text-sky-500 mr-2"></i> 風險分佈圖
+                            </h2>
+                            <button onclick="exportToCSV()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-medium py-1.5 px-3 rounded transition shadow-sm border border-emerald-200 flex items-center gap-1">
+                                <i class="fa-solid fa-file-csv"></i> 匯出 CSV 報告
+                            </button>
+                        </div>
+                        <div class="relative w-full flex-grow min-h-0 pb-2">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2 flex flex-col h-full">
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 flex-grow flex flex-col overflow-hidden">
+                            <h3 class="text-sm font-bold text-slate-700 mb-2 shrink-0">📜 AI 綜合評估</h3>
+                            <p id="summaryText" class="text-sm text-slate-600 leading-relaxed overflow-y-auto no-scrollbar pr-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full flex flex-col flex-grow overflow-hidden pt-2">
+                    <h2 class="text-lg font-bold text-slate-800 mb-3 shrink-0"><i class="fa-solid fa-list-check text-sky-500"></i> 逐條風險審閱</h2>
+                    <div id="clausesContainer" class="flex-col gap-3 overflow-y-auto no-scrollbar pb-2 flex-grow pr-2">
+                        </div>
+                    
+                    <div class="mt-2 text-xs text-slate-400 text-center border-t border-slate-200 pt-3 shrink-0">
+                        <i class="fa-solid fa-scale-unbalanced"></i> 本系統為 AI 輔助工具，分析結果僅供參考，不具實質法律效力。正式合約爭議請諮詢專業法律人士。
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="loadingOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex flex-col justify-center items-center hidden z-20 border border-slate-200 shadow-sm">
+                <div class="loader mb-4"></div>
+                <h3 class="text-lg font-bold text-slate-800">AI 正在推演法理邏輯...</h3>
+                <p class="text-slate-500 text-sm mt-2 text-center px-4" id="loadingText">系統正啟用跨領域防呆機制<br>動態調整法規邊界，保障您的核心權益</p>
+            </div>
+
+            <div id="emptyState" class="glass-panel rounded-xl shadow-sm border border-slate-200 h-full flex flex-col justify-center items-center text-slate-400 p-8 text-center">
+                <i class="fa-regular fa-file-contract text-7xl mb-5 text-slate-300"></i>
+                <h3 class="text-xl font-bold text-slate-600">等待審閱中</h3>
+                <p class="text-sm mt-2 text-slate-500">請在左側貼上合約，系統將為您產生視覺化分析圖表</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+body { 
+    font-family: 'Noto Sans TC', sans-serif; 
+    background-color: #f1f5f9; 
+}
+
+.glass-panel { 
+    background: rgba(255, 255, 255, 0.98); 
+    backdrop-filter: blur(10px); 
+}
+
+.loader { 
+    border: 4px solid #e2e8f0; 
+    border-top: 4px solid #0ea5e9; 
+    border-radius: 50%; 
+    width: 40px; 
+    height: 40px; 
+    animation: spin 1s linear infinite; 
+}
+
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+
+/* 隱藏捲軸但可捲動 */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 摺疊選單動畫與樣式 */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] > summary ~ * { animation: slideDown 0.3s ease-in-out; }
+
+@keyframes slideDown { 
+    from { opacity: 0; transform: translateY(-10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
